@@ -1,7 +1,6 @@
 package com.example.ragdollmod.network;
 
 import com.example.ragdollmod.PlayerRagdollMod;
-import com.gly091020.sableragdolllib.api.RagdollApi;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -24,11 +23,10 @@ public record ToggleRagdollPayload() implements CustomPacketPayload {
     public static void handle(ToggleRagdollPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {
-                if (RagdollApi.isRagdolled(player)) {
-                    RagdollApi.stopRagdoll(player);
-                } else {
-                    RagdollApi.startRagdoll(player);
-                }
+                player.getServer().getCommands().performPrefixedCommand(
+                    player.createCommandSourceStack().withPermission(2), 
+                    "ragdoll"
+                );
             }
         });
     }
