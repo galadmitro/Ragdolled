@@ -16,7 +16,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -250,7 +250,7 @@ public class SableRagdollLib {
                 }
 
                 ragdoll.tick(level);
-                PacketDistributor.sendToPlayersInDimension(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
+                PacketDistributor.sendToPlayersInServerLevel(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
             }
         }
     }
@@ -303,21 +303,14 @@ public class SableRagdollLib {
         }
 
         @SubscribeEvent
-        public static void onRenderLevelStage(RenderLevelStageEvent event) {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.player == null) return;
+        public static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
 
-                for (DragSession drag : RagdollManager.ACTIVE_DRAGS.values()) {
-                    if (drag.playerId.equals(mc.player.getUUID())) {
-                        RagdollInstance ragdoll = CLIENT_RAGDOLLS.get(drag.entityId);
-                        if (ragdoll != null && drag.partIndex < ragdoll.parts.size()) {
-                            Vec3 start = ragdoll.parts.get(drag.partIndex).position;
-                            Vec3 end = drag.targetPos;
-                            Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
-                        }
-                    }
-                }
+            RagdollInstance playerRagdoll = CLIENT_RAGDOLLS.get(mc.player.getId());
+            if (playerRagdoll != null && !playerRagdoll.parts.isEmpty()) {
+                RagdollPart head = playerRagdoll.parts.get(0);
+                mc.gameRenderer.getMainCamera().setPosition(head.position);
             }
         }
     }
