@@ -251,7 +251,7 @@ public class SableRagdollLib {
                 }
 
                 ragdoll.tick(level);
-                PacketDistributor.sendToPlayersInLevel(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
+                PacketDistributor.sendToPlayersInDimension(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
             }
         }
     }
