@@ -55,13 +55,11 @@ repositories {
         name = "ParchmentMC"
         url = "https://maven.parchmentmc.org"
     }
-    maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
+    flatDir {
+        dir 'libs'
     }
 }
 
 dependencies {
-    implementation "maven.modrinth:sableragdolllib:0.8-alpha"
-    compileOnly "maven.modrinth:sableragdolllib:0.8-alpha"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
