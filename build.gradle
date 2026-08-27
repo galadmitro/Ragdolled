@@ -63,4 +63,5 @@ repositories {
 
 dependencies {
     implementation "maven.modrinth:sableragdolllib:0.8-alpha"
+    compileOnly "maven.modrinth:sableragdolllib:0.8-alpha"
 }
