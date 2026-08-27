@@ -3,8 +3,8 @@ loaderVersion="[4,)"
 license="MIT"
 
 [[mods]]
-modId="ragdollmod"
+modId="sableragdolllib"
 version="1.0.0"
-displayName="Ragdoll Mod"
-authors="hapermeh"
+displayName="Sable Ragdoll Lib"
+authors="gly091020"
 description="Ragdoll physics and synchronization library."
