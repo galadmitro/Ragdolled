@@ -1,24 +1,8 @@
 modLoader="javafml"
-loaderVersion="[4,)"
+loaderVersion="[1,)"
 license="MIT"
 
 [[mods]]
-modId="sableragdolllib"
+modId="ragdollmod"
 version="1.0.0"
 displayName="Player Ragdoll Mod"
-authors="YourName"
-description="Press H to switch into ragdoll physics mode using Sable RagdollLib."
-
-[[dependencies.ragdollmod]]
-    modId="neoforge"
-    type="required"
-    versionRange="[21.1,)"
-    ordering="NONE"
-    side="BOTH"
-
-[[dependencies.ragdollmod]]
-    modId="sableragdolllib"
-    type="required"
-    versionRange="*"
-    ordering="AFTER"
-    side="BOTH"
