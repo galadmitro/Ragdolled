@@ -3,7 +3,7 @@ loaderVersion="[4,)"
 license="MIT"
 
 [[mods]]
-modId="ragdollmod"
+modId="sableragdolllib"
 version="1.0.0"
 displayName="Player Ragdoll Mod"
 authors="YourName"
