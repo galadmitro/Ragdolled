@@ -1,11 +1,7 @@
 package com.example.gly091020.sableragdolllib;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -13,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -56,7 +51,7 @@ public class SableRagdollLib {
 
     public record ServerboundDragPacket(int entityId, int partIndex, Vec3 targetPos, boolean releasing) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ServerboundDragPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MODID, "drag_packet"));
-        public static final StreamCodec<FriendlyByteBuf, ServerboundDragPacket> STREAM_CODEC = StreamCodec.of(
+        public static final StreamCodec<ByteBuf, ServerboundDragPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
                 buf.writeInt(packet.entityId);
                 buf.writeInt(packet.partIndex);
@@ -81,12 +76,12 @@ public class SableRagdollLib {
 
     public record ClientboundRagdollSyncPacket(int entityId, List<RagdollPart> parts) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ClientboundRagdollSyncPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MODID, "sync_packet"));
-        public static final StreamCodec<FriendlyByteBuf, ClientboundRagdollSyncPacket> STREAM_CODEC = StreamCodec.of(
+        public static final StreamCodec<ByteBuf, ClientboundRagdollSyncPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
                 buf.writeInt(packet.entityId);
                 buf.writeInt(packet.parts.size());
                 for (RagdollPart part : packet.parts) {
-                    buf.writeUtf(part.name);
+                    ByteBufCodecs.STRING_UTF8.encode(buf, part.name);
                     buf.writeDouble(part.position.x);
                     buf.writeDouble(part.position.y);
                     buf.writeDouble(part.position.z);
@@ -100,7 +95,7 @@ public class SableRagdollLib {
                 int count = buf.readInt();
                 List<RagdollPart> parts = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
-                    String name = buf.readUtf();
+                    String name = ByteBufCodecs.STRING_UTF8.decode(buf);
                     Vec3 pos = new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble());
                     Vec3 vel = new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble());
                     parts.add(new RagdollPart(name, pos, vel, new AABB(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25)));
@@ -136,7 +131,7 @@ public class SableRagdollLib {
             velocity = velocity.add(0, -0.08, 0).scale(0.98);
             Vec3 nextPos = position.add(velocity);
             AABB futureBox = localBounds.move(nextPos);
-            if (!level.getBlockCollisions(null, futureBox).iterator().hasNext()) {
+            if (level.noCollision(futureBox)) {
                 position = nextPos;
             } else {
                 velocity = new Vec3(velocity.x * 0.5, 0, velocity.z * 0.5);
@@ -174,6 +169,7 @@ public class SableRagdollLib {
         public final int entityId;
         public final List<RagdollPart> parts = new ArrayList<>();
         public final List<RagdollJoint> joints = new ArrayList<>();
+        public int ticksExisted = 0;
 
         public RagdollInstance(int entityId, Vec3 origin) {
             this.entityId = entityId;
@@ -192,6 +188,7 @@ public class SableRagdollLib {
         }
 
         public void tick(ServerLevel level) {
+            ticksExisted++;
             for (RagdollPart part : parts) {
                 part.stepPhysics(level);
             }
@@ -241,7 +238,17 @@ public class SableRagdollLib {
                     session.applyForce(instance);
                 }
             }
-            for (RagdollInstance ragdoll : ACTIVE_RAGDOLLS.values()) {
+
+            Iterator<Map.Entry<Integer, RagdollInstance>> iterator = ACTIVE_RAGDOLLS.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, RagdollInstance> entry = iterator.next();
+                RagdollInstance ragdoll = entry.getValue();
+
+                if (ragdoll.ticksExisted > 400) {
+                    iterator.remove();
+                    continue;
+                }
+
                 ragdoll.tick(level);
                 PacketDistributor.sendToPlayersInDimension(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
             }
