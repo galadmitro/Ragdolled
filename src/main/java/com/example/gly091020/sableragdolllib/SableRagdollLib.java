@@ -24,6 +24,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -250,7 +251,7 @@ public class SableRagdollLib {
                 }
 
                 ragdoll.tick(level);
-                PacketDistributor.sendToPlayersInDimension(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
+                PacketDistributor.sendToPlayersInLevel(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
             }
         }
     }
@@ -289,6 +290,7 @@ public class SableRagdollLib {
     @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
     public static class ClientEventHandler {
         public static final Map<Integer, RagdollInstance> CLIENT_RAGDOLLS = new ConcurrentHashMap<>();
+        private static Method setPositionMethod = null;
 
         public static void handleSyncPacket(ClientboundRagdollSyncPacket packet, net.neoforged.neoforge.network.handling.IPayloadContext context) {
             context.enqueueWork(() -> {
@@ -305,13 +307,25 @@ public class SableRagdollLib {
         @SubscribeEvent
         public static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) return;
+            if (mc.player == null || mc.gameRenderer == null) return;
 
             RagdollInstance playerRagdoll = CLIENT_RAGDOLLS.get(mc.player.getId());
             if (playerRagdoll != null && !playerRagdoll.parts.isEmpty()) {
                 RagdollPart head = playerRagdoll.parts.get(0);
                 if (head != null && head.position != null) {
-                    mc.gameRenderer.getMainCamera().setPosition(head.position);
+                    try {
+                        if (setPositionMethod == null) {
+                            setPositionMethod = net.minecraft.client.Camera.class.getDeclaredMethod("setPosition", Vec3.class);
+                            setPositionMethod.setAccessible(true);
+                        }
+                        setPositionMethod.invoke(mc.gameRenderer.getMainCamera(), head.position);
+                    } catch (Exception e) {
+                        try {
+                            Method altMethod = net.minecraft.client.Camera.class.getDeclaredMethod("setPosition", double.class, double.class, double.class);
+                            altMethod.setAccessible(true);
+                            altMethod.invoke(mc.gameRenderer.getMainCamera(), head.position.x, head.position.y, head.position.z);
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
         }
