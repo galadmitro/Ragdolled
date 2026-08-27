@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mod(SableRagdollLib.MODID)
 public class SableRagdollLib {
-    public static final String MODID = "sableragdolllib";
+    public static final String MODID = "ragdollmod";
 
     public SableRagdollLib(IEventBus modEventBus) {
         modEventBus.addListener(this::registerPayloads);
