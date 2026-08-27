@@ -250,7 +250,7 @@ public class SableRagdollLib {
                 }
 
                 ragdoll.tick(level);
-                PacketDistributor.sendToPlayersInServerLevel(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
+                PacketDistributor.sendToPlayersInDimension(level, new ClientboundRagdollSyncPacket(ragdoll.entityId, ragdoll.parts));
             }
         }
     }
@@ -310,7 +310,9 @@ public class SableRagdollLib {
             RagdollInstance playerRagdoll = CLIENT_RAGDOLLS.get(mc.player.getId());
             if (playerRagdoll != null && !playerRagdoll.parts.isEmpty()) {
                 RagdollPart head = playerRagdoll.parts.get(0);
-                mc.gameRenderer.getMainCamera().setPosition(head.position);
+                if (head != null && head.position != null) {
+                    mc.gameRenderer.getMainCamera().setPosition(head.position);
+                }
             }
         }
     }
