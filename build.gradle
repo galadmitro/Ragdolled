@@ -1,6 +1,8 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.5-beta'
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.75'
 }
 
 tasks.named('wrapper', Wrapper) {
@@ -10,24 +12,23 @@ tasks.named('wrapper', Wrapper) {
 version = '1.0.0'
 group = 'com.example.ragdollmod'
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = "https://api.modrinth.com/maven"
-            }
-        }
-        filter {
-            includeGroup "maven.modrinth"
-        }
+base {
+    archivesName = 'ragdollmod'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 neoForge {
-    version = '21.1.65'
+    version = '21.1.84'
+
+    parchment {
+        mappingsVersion = '2024.07.28'
+        minecraftVersion = '1.21.1'
+    }
 
     runs {
         client {
@@ -36,22 +37,26 @@ neoForge {
         }
         server {
             server()
-            programArgument '--nogui'
+            programArgument '--nolazy-dfu'
             systemProperty 'neoforge.enabledGameTestNamespaces', 'ragdollmod'
         }
     }
 
     mods {
         ragdollmod {
-            sourceSet(sourceSets.main)
+            sourceSet sourceSets.main
         }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
     }
 }
 
 dependencies {
     implementation "maven.modrinth:sableragdolllib:0.8-alpha"
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
 }
