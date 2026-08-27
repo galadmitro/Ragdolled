@@ -14,7 +14,6 @@ public class ClientInputHandler {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         while (ModKeybindings.RAGDOLL_KEY.consumeClick()) {
-            // Send payload to server when 'H' key is pressed
             PacketDistributor.sendToServer(new ToggleRagdollPayload());
         }
     }

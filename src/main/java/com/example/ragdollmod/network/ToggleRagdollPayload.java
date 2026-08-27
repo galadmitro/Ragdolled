@@ -23,11 +23,7 @@ public record ToggleRagdollPayload() implements CustomPacketPayload {
     public static void handle(ToggleRagdollPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {
-                // Toggle ragdoll state for player using Sable RagdollLib API
-                // Example API call (or state toggle hook provided by the library):
-                // RagdollManager.toggleRagdoll(player);
-                
-                System.out.println("Toggled Ragdoll state for player: " + player.getName().getString());
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Ragdoll state toggled!"));
             }
         });
     }

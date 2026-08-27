@@ -17,7 +17,7 @@ public class ModKeybindings {
         "key.ragdollmod.toggle_ragdoll",
         KeyConflictContext.IN_GAME,
         InputConstants.Type.KEYSYM,
-        GLFW.GLFW_KEY_H, // 'H' key bind
+        GLFW.GLFW_KEY_H,
         "key.categories.ragdollmod"
     );
 
